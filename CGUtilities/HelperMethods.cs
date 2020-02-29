@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace CGUtilities
 {
     public class HelperMethods
-    {
+    {        
         public static Enums.PointInPolygon PointInTriangle(Point p, Point a, Point b, Point c)
         {
             if (a.Equals(b) && b.Equals(c))
@@ -85,6 +85,99 @@ namespace CGUtilities
         public static Point GetVector(Line l)
         {
             return l.Start.Vector(l.End);
+        }
+        public static Enums.PointInPolygon PointInConvexPolygon(Point point, Polygon polygon)
+        {
+            bool allRight = true;
+            bool allLeft = true;
+            foreach (Line line in polygon.lines)
+            {
+                if (CheckTurn(line, point) == Enums.TurnType.Left)
+                    allRight = false;
+                else if (CheckTurn(line, point) == Enums.TurnType.Right)
+                    allLeft = false;
+                else if (PointOnSegment(point, line.Start, line.End))
+                    return Enums.PointInPolygon.OnEdge;
+            }
+            if (allRight || allLeft)
+                return Enums.PointInPolygon.Inside;
+            else
+                return Enums.PointInPolygon.Outside;
+        }
+
+        public static Enums.PointInPolygon PointInConcavePolygon(Point point, Polygon polygon)
+        {
+            Line horizontalLine = new Line(point, new Point(point.X+10, point.Y));
+            int intersections = 0;
+            foreach (Line line in polygon.lines)
+            {
+                if (PointOnSegment(point, line.Start, line.End))
+                    return Enums.PointInPolygon.OnEdge;
+                Point intersectionPoint = LineLineIntersectionPoint(line, horizontalLine);
+                if (!ParallelLines(horizontalLine, line) &&
+                    PointOnRay(intersectionPoint, horizontalLine.Start, horizontalLine.End) &&
+                    PointOnSegment(intersectionPoint, line.Start, line.End))
+                {
+                    if (intersectionPoint == line.Start && line.End.Y > intersectionPoint.Y)
+                        continue;
+                    if (intersectionPoint == line.End && line.Start.Y > intersectionPoint.Y)
+                        continue;
+                    intersections++;
+
+                }
+            }
+            if (intersections % 2 == 1)
+                return Enums.PointInPolygon.Inside;
+            return Enums.PointInPolygon.Outside;
+        }
+        public static double Slope(Line line)
+        {
+            return (line.End.Y - line.Start.Y) / (line.End.X - line.Start.X);
+        }
+        public static Point LineLineIntersectionPoint(Line line1, Line line2)
+        {
+            double m;
+            double c;
+            double x;
+            //y=mx+c
+            //m1x+c1 = m2x+c2
+            //x = (c2-c1)/(m1-m2)
+            if (line1.Start.X != line1.End.X && line2.Start.X != line2.End.X)
+            {
+                double m1 = Slope(line1);
+                double c1 = line1.Start.Y - m1 * line1.Start.X;
+                double m2 = Slope(line2);
+                double c2 = line2.Start.Y - m2 * line2.Start.X;
+                m = m1;
+                c = c1;
+                x = (c2 - c1) / (m1 - m2);
+            }
+            else if (line1.Start.X != line1.End.X)
+            {
+                m = Slope(line2);
+                c = line2.Start.Y - m * line2.Start.X;
+                x = line1.Start.X;
+            }
+            else
+            {
+                m = Slope(line1);
+                c = line1.Start.Y - m * line1.Start.X;
+                x = line2.Start.X;
+            }
+            double y = m * x + c;
+
+            return new Point(x, y);
+        }
+        public static bool ParallelLines(Line line1, Line line2)
+        {
+            if (line1.Start.X == line1.End.X && line2.Start.X == line2.End.X)
+                return true;
+            if (line1.Start.X != line1.End.X && line2.Start.X != line2.End.X)
+            {
+                if (Slope(line1) == Slope(line2))
+                    return true;
+            }
+            return false;
         }
     }
 }
