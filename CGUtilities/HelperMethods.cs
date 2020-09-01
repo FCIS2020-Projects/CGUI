@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace CGUtilities
 {
     public class HelperMethods
-    {        
+    {
         public static Enums.PointInPolygon PointInTriangle(Point p, Point a, Point b, Point c)
         {
             if (a.Equals(b) && b.Equals(c))
@@ -43,6 +43,11 @@ namespace CGUtilities
             if (result < 0) return Enums.TurnType.Right;
             else if (result > 0) return Enums.TurnType.Left;
             else return Enums.TurnType.Colinear;
+        }
+        public static double distance(Point a, Point b)
+        {
+            return Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
+
         }
         public static double CrossProduct(Point a, Point b)
         {
@@ -86,49 +91,74 @@ namespace CGUtilities
         {
             return l.Start.Vector(l.End);
         }
-        public static Enums.PointInPolygon PointInConvexPolygon(Point point, Polygon polygon)
+        public static double DotProduct(Point a , Point b)
         {
-            bool allRight = true;
-            bool allLeft = true;
-            foreach (Line line in polygon.lines)
-            {
-                if (CheckTurn(line, point) == Enums.TurnType.Left)
-                    allRight = false;
-                else if (CheckTurn(line, point) == Enums.TurnType.Right)
-                    allLeft = false;
-                else if (PointOnSegment(point, line.Start, line.End))
-                    return Enums.PointInPolygon.OnEdge;
-            }
-            if (allRight || allLeft)
-                return Enums.PointInPolygon.Inside;
-            else
-                return Enums.PointInPolygon.Outside;
+            return a.X * b.X + a.Y * b.Y ;
         }
 
-        public static Enums.PointInPolygon PointInConcavePolygon(Point point, Polygon polygon)
+        public static int MinX(List<Point> points)
         {
-            Line horizontalLine = new Line(point, new Point(point.X+10, point.Y));
-            int intersections = 0;
-            foreach (Line line in polygon.lines)
+            double minX = points[0].X;
+            int index = 0;
+            for (int i = 0; i < points.Count; i++)
             {
-                if (PointOnSegment(point, line.Start, line.End))
-                    return Enums.PointInPolygon.OnEdge;
-                Point intersectionPoint = LineLineIntersectionPoint(line, horizontalLine);
-                if (!ParallelLines(horizontalLine, line) &&
-                    PointOnRay(intersectionPoint, horizontalLine.Start, horizontalLine.End) &&
-                    PointOnSegment(intersectionPoint, line.Start, line.End))
+                if (points[i].X < minX)
                 {
-                    if (intersectionPoint == line.Start && line.End.Y > intersectionPoint.Y)
-                        continue;
-                    if (intersectionPoint == line.End && line.Start.Y > intersectionPoint.Y)
-                        continue;
-                    intersections++;
-
+                    minX = points[i].X;
+                    index = i;
                 }
             }
-            if (intersections % 2 == 1)
-                return Enums.PointInPolygon.Inside;
-            return Enums.PointInPolygon.Outside;
+            return index;
+        }
+        public static int MaxX(List<Point> points)
+        {
+            double maxX = points[0].X;
+            int index = 0;
+            for (int i = 0; i < points.Count; i++)
+            {
+                if (points[i].X > maxX)
+                {
+                    maxX = points[i].X;
+                    index = i;
+                }
+            }
+            return index;
+        }
+        public static int MinY(List<Point> points)
+        {
+            double minY = points[0].Y;
+            int index = 0;
+            for (int i = 0; i < points.Count; i++)
+            {
+                if (points[i].Y < minY)
+                {
+                    minY = points[i].Y;
+                    index = i;
+                }
+            }
+            return index;
+        }
+        public static int MaxY(List<Point> points)
+        {
+            double maxY = points[0].Y;
+            int index = 0;
+            for (int i = 0; i < points.Count; i++)
+            {
+                if (points[i].Y > maxY)
+                {
+                    maxY = points[i].Y;
+                    index = i;
+                }
+            }
+            return index;
+        }
+        public static bool Intersection(Line l1, Line l2)
+        {
+            if (CheckTurn(l1, l2.Start) != CheckTurn(l1, l2.End) &&
+                CheckTurn(l2, l1.Start) != CheckTurn(l2, l1.End))
+                return true;
+            else
+                return false;
         }
         public static double Slope(Line line)
         {
@@ -167,17 +197,6 @@ namespace CGUtilities
             double y = m * x + c;
 
             return new Point(x, y);
-        }
-        public static bool ParallelLines(Line line1, Line line2)
-        {
-            if (line1.Start.X == line1.End.X && line2.Start.X == line2.End.X)
-                return true;
-            if (line1.Start.X != line1.End.X && line2.Start.X != line2.End.X)
-            {
-                if (Slope(line1) == Slope(line2))
-                    return true;
-            }
-            return false;
         }
     }
 }

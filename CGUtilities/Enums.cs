@@ -27,5 +27,21 @@ namespace CGUtilities
             Lines,
             Polygons
         }
+
+        public enum EventType
+        {
+            Left,
+            Right,
+            Intersection
+        }
+
+        public enum VertexType
+        {
+            Start,
+            End,
+            Merge,
+            Split,
+            Regular
+        }
     }
 }
